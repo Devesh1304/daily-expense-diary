@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '../theme/colors';
 import { formatDisplayDate } from '../utils/dateRanges';
 
@@ -11,24 +12,6 @@ interface Props {
 
 export default function DateField({ value, onChange }: Props) {
   const [showPicker, setShowPicker] = useState(false);
-
-  if (Platform.OS === 'web') {
-    return (
-      <View style={styles.field}>
-        <TextInput
-          style={styles.webInput}
-          value={value}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor={colors.textMuted}
-          onChangeText={onChange}
-        />
-        <Ionicons name="calendar-outline" size={20} color={colors.text} />
-      </View>
-    );
-  }
-
-  // Lazy require so the native module is only touched on native platforms.
-  const DateTimePicker = require('@react-native-community/datetimepicker').default;
 
   return (
     <View>
@@ -67,12 +50,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     backgroundColor: colors.background,
-  },
-  webInput: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.text,
-    outlineStyle: 'none' as any,
   },
   text: { fontSize: 15, color: colors.text },
 });
