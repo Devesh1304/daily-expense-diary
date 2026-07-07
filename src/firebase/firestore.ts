@@ -104,11 +104,26 @@ export async function deleteTransaction(id: string): Promise<void> {
   await deleteDoc(doc(db, 'transactions', id));
 }
 
-export async function updateTransaction(
+export interface EditTransactionInput {
+  date: string;
+  amount: number;
+  accountName: string;
+  remarks: string;
+}
+
+export async function updateTransactionWithAccount(
   id: string,
-  fields: Partial<Pick<Transaction, 'date' | 'amount' | 'remarks'>>
+  userId: string,
+  input: EditTransactionInput
 ): Promise<void> {
-  await updateDoc(doc(db, 'transactions', id), fields);
+  const account = await getOrCreateLedgerAccount(userId, input.accountName, 'other');
+  await updateDoc(doc(db, 'transactions', id), {
+    date: input.date,
+    amount: input.amount,
+    accountId: account.id,
+    accountName: input.accountName.trim(),
+    remarks: input.remarks ?? '',
+  });
 }
 
 // Real-time listener for every transaction belonging to a user.

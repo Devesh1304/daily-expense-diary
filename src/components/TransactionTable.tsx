@@ -6,6 +6,8 @@ import { colors } from '../theme/colors';
 import { formatINR } from '../utils/currency';
 import { formatDisplayDate } from '../utils/dateRanges';
 import ConfirmDialog from './ConfirmDialog';
+import TransactionDetailModal from './TransactionDetailModal';
+import AddTransactionModal from './AddTransactionModal';
 
 export type SortKey = 'date' | 'accountName' | 'credit' | 'debit';
 
@@ -25,6 +27,8 @@ const COLUMNS: { key: SortKey; label: string; flex: number }[] = [
 ];
 
 export default function TransactionTable({ transactions, sortKey, sortDir, onSortChange, onDelete }: Props) {
+  const [viewing, setViewing] = useState<Transaction | null>(null);
+  const [editing, setEditing] = useState<Transaction | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
 
   return (
@@ -45,14 +49,16 @@ export default function TransactionTable({ transactions, sortKey, sortDir, onSor
             />
           </TouchableOpacity>
         ))}
-        {onDelete && <View style={styles.deleteHeaderSpacer} />}
       </View>
 
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => (
-          <View style={[styles.row, index % 2 === 1 && styles.rowAlt]}>
+          <TouchableOpacity
+            style={[styles.row, index % 2 === 1 && styles.rowAlt]}
+            onPress={() => setViewing(item)}
+          >
             <Text style={[styles.cell, { flex: 1.1 }]}>{formatDisplayDate(item.date)}</Text>
             <Text style={[styles.cell, { flex: 1.3 }]} numberOfLines={1}>{item.accountName}</Text>
             <Text style={[styles.cell, styles.amountCell, styles.credit, { flex: 1 }]}>
@@ -61,17 +67,34 @@ export default function TransactionTable({ transactions, sortKey, sortDir, onSor
             <Text style={[styles.cell, styles.amountCell, styles.debit, { flex: 1 }]}>
               {item.direction === 'debit' ? formatINR(item.amount) : '-'}
             </Text>
-            {onDelete && (
-              <TouchableOpacity style={styles.deleteButton} onPress={() => setPendingDelete(item)}>
-                <Ionicons name="trash-outline" size={16} color={colors.textMuted} />
-              </TouchableOpacity>
-            )}
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
           <Text style={styles.empty}>No entries in this range yet.</Text>
         }
       />
+
+      <TransactionDetailModal
+        transaction={viewing}
+        onClose={() => setViewing(null)}
+        onEdit={() => {
+          setEditing(viewing);
+          setViewing(null);
+        }}
+        onDelete={() => {
+          setPendingDelete(viewing);
+          setViewing(null);
+        }}
+      />
+
+      {editing && (
+        <AddTransactionModal
+          visible={!!editing}
+          onClose={() => setEditing(null)}
+          direction={editing.direction}
+          existingTransaction={editing}
+        />
+      )}
 
       <ConfirmDialog
         visible={!!pendingDelete}
@@ -98,7 +121,6 @@ const styles = StyleSheet.create({
   },
   headerCell: { flexDirection: 'row', alignItems: 'center' },
   headerText: { fontWeight: '600', color: colors.text },
-  deleteHeaderSpacer: { width: 28 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -110,7 +132,6 @@ const styles = StyleSheet.create({
   amountCell: { textAlign: 'right' },
   credit: { color: colors.credit },
   debit: { color: colors.debit },
-  deleteButton: { width: 28, alignItems: 'center' },
   empty: {
     textAlign: 'center',
     color: colors.textMuted,

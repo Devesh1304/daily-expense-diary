@@ -14,8 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionsContext';
-import { createTransaction } from '../firebase/firestore';
-import { Direction } from '../types';
+import { createTransaction, updateTransactionWithAccount } from '../firebase/firestore';
+import { Direction, Transaction } from '../types';
 import { colors } from '../theme/colors';
 import { todayString } from '../utils/dateRanges';
 import DateField from './DateField';
@@ -24,16 +24,18 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   direction: Direction;
+  existingTransaction?: Transaction;
 }
 
-export default function AddTransactionModal({ visible, onClose, direction }: Props) {
+export default function AddTransactionModal({ visible, onClose, direction, existingTransaction }: Props) {
   const { user } = useAuth();
   const { ledgerAccounts } = useTransactions();
+  const isEditing = !!existingTransaction;
 
-  const [date, setDate] = useState(todayString());
-  const [amount, setAmount] = useState('');
-  const [name, setName] = useState('');
-  const [remarks, setRemarks] = useState('');
+  const [date, setDate] = useState(existingTransaction?.date ?? todayString());
+  const [amount, setAmount] = useState(existingTransaction ? String(existingTransaction.amount) : '');
+  const [name, setName] = useState(existingTransaction?.accountName ?? '');
+  const [remarks, setRemarks] = useState(existingTransaction?.remarks ?? '');
   const [saving, setSaving] = useState(false);
 
   const suggestions =
@@ -42,10 +44,10 @@ export default function AddTransactionModal({ visible, onClose, direction }: Pro
       : [];
 
   function reset() {
-    setDate(todayString());
-    setAmount('');
-    setName('');
-    setRemarks('');
+    setDate(existingTransaction?.date ?? todayString());
+    setAmount(existingTransaction ? String(existingTransaction.amount) : '');
+    setName(existingTransaction?.accountName ?? '');
+    setRemarks(existingTransaction?.remarks ?? '');
   }
 
   async function handleSave(addAnother: boolean) {
@@ -62,21 +64,31 @@ export default function AddTransactionModal({ visible, onClose, direction }: Pro
 
     setSaving(true);
     try {
-      await createTransaction({
-        userId: user.uid,
-        direction,
-        date,
-        amount: numericAmount,
-        accountName: name,
-        remarks,
-      });
-      if (addAnother) {
-        setAmount('');
-        setName('');
-        setRemarks('');
-      } else {
-        reset();
+      if (existingTransaction) {
+        await updateTransactionWithAccount(existingTransaction.id, user.uid, {
+          date,
+          amount: numericAmount,
+          accountName: name,
+          remarks,
+        });
         onClose();
+      } else {
+        await createTransaction({
+          userId: user.uid,
+          direction,
+          date,
+          amount: numericAmount,
+          accountName: name,
+          remarks,
+        });
+        if (addAnother) {
+          setAmount('');
+          setName('');
+          setRemarks('');
+        } else {
+          reset();
+          onClose();
+        }
       }
     } catch (e: any) {
       Alert.alert('Save failed', e.message ?? 'Please try again.');
@@ -93,7 +105,7 @@ export default function AddTransactionModal({ visible, onClose, direction }: Pro
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={styles.headerRow}>
-            <Text style={styles.title}>Add Transaction</Text>
+            <Text style={styles.title}>{isEditing ? 'Edit Transaction' : 'Add Transaction'}</Text>
             <TouchableOpacity onPress={() => { reset(); onClose(); }}>
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
@@ -144,19 +156,21 @@ export default function AddTransactionModal({ visible, onClose, direction }: Pro
             />
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[styles.button, styles.secondaryButton]}
-                onPress={() => handleSave(true)}
-                disabled={saving}
-              >
-                <Text style={styles.secondaryButtonText}>Save & Add New</Text>
-              </TouchableOpacity>
+              {!isEditing && (
+                <TouchableOpacity
+                  style={[styles.button, styles.secondaryButton]}
+                  onPress={() => handleSave(true)}
+                  disabled={saving}
+                >
+                  <Text style={styles.secondaryButtonText}>Save & Add New</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.button, styles.primaryButton]}
                 onPress={() => handleSave(false)}
                 disabled={saving}
               >
-                <Text style={styles.primaryButtonText}>Save</Text>
+                <Text style={styles.primaryButtonText}>{isEditing ? 'Save Changes' : 'Save'}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
