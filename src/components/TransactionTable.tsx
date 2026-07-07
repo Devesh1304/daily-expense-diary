@@ -1,10 +1,11 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Transaction } from '../types';
 import { colors } from '../theme/colors';
 import { formatINR } from '../utils/currency';
 import { formatDisplayDate } from '../utils/dateRanges';
+import ConfirmDialog from './ConfirmDialog';
 
 export type SortKey = 'date' | 'accountName' | 'credit' | 'debit';
 
@@ -24,6 +25,8 @@ const COLUMNS: { key: SortKey; label: string; flex: number }[] = [
 ];
 
 export default function TransactionTable({ transactions, sortKey, sortDir, onSortChange, onDelete }: Props) {
+  const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -42,22 +45,14 @@ export default function TransactionTable({ transactions, sortKey, sortDir, onSor
             />
           </TouchableOpacity>
         ))}
+        {onDelete && <View style={styles.deleteHeaderSpacer} />}
       </View>
 
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => (
-          <TouchableOpacity
-            style={[styles.row, index % 2 === 1 && styles.rowAlt]}
-            onLongPress={() => {
-              if (!onDelete) return;
-              Alert.alert('Delete entry', `Delete ${item.accountName} - ${formatINR(item.amount)}?`, [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => onDelete(item) },
-              ]);
-            }}
-          >
+          <View style={[styles.row, index % 2 === 1 && styles.rowAlt]}>
             <Text style={[styles.cell, { flex: 1.1 }]}>{formatDisplayDate(item.date)}</Text>
             <Text style={[styles.cell, { flex: 1.3 }]} numberOfLines={1}>{item.accountName}</Text>
             <Text style={[styles.cell, styles.amountCell, styles.credit, { flex: 1 }]}>
@@ -66,11 +61,27 @@ export default function TransactionTable({ transactions, sortKey, sortDir, onSor
             <Text style={[styles.cell, styles.amountCell, styles.debit, { flex: 1 }]}>
               {item.direction === 'debit' ? formatINR(item.amount) : '-'}
             </Text>
-          </TouchableOpacity>
+            {onDelete && (
+              <TouchableOpacity style={styles.deleteButton} onPress={() => setPendingDelete(item)}>
+                <Ionicons name="trash-outline" size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
         )}
         ListEmptyComponent={
           <Text style={styles.empty}>No entries in this range yet.</Text>
         }
+      />
+
+      <ConfirmDialog
+        visible={!!pendingDelete}
+        title="Delete entry"
+        message={pendingDelete ? `Delete ${pendingDelete.accountName} - ${formatINR(pendingDelete.amount)}?` : undefined}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) onDelete?.(pendingDelete);
+          setPendingDelete(null);
+        }}
       />
     </View>
   );
@@ -87,8 +98,10 @@ const styles = StyleSheet.create({
   },
   headerCell: { flexDirection: 'row', alignItems: 'center' },
   headerText: { fontWeight: '600', color: colors.text },
+  deleteHeaderSpacer: { width: 28 },
   row: {
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
@@ -97,6 +110,7 @@ const styles = StyleSheet.create({
   amountCell: { textAlign: 'right' },
   credit: { color: colors.credit },
   debit: { color: colors.debit },
+  deleteButton: { width: 28, alignItems: 'center' },
   empty: {
     textAlign: 'center',
     color: colors.textMuted,
