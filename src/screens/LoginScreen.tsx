@@ -41,7 +41,7 @@ export default function LoginScreen({ navigation }: any) {
     >
       <View style={styles.logoContainer}>
         <View style={styles.logoCircle}>
-          <Text style={styles.logoIcon}>$</Text>
+          <Text style={styles.logoIcon}>₹</Text>
         </View>
         <Text style={styles.logo}>Daily Expense Diary</Text>
         <Text style={styles.subtitle}>Sign in to your diary</Text>
