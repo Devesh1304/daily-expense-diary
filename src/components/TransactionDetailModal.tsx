@@ -33,7 +33,7 @@ export default function TransactionDetailModal({ transaction, onClose, onEdit, o
           <View style={styles.headerRow}>
             <Text style={styles.title}>Transaction Details</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={22} color={colors.text} />
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -51,9 +51,11 @@ export default function TransactionDetailModal({ transaction, onClose, onEdit, o
 
           <View style={styles.buttonRow}>
             <TouchableOpacity style={[styles.button, styles.editButton]} onPress={onEdit}>
+              <Ionicons name="create-outline" size={16} color="#fff" style={{ marginRight: 4 }} />
               <Text style={styles.buttonText}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={onDelete}>
+              <Ionicons name="trash-outline" size={16} color="#fff" style={{ marginRight: 4 }} />
               <Text style={styles.buttonText}>Delete</Text>
             </TouchableOpacity>
           </View>
@@ -66,7 +68,7 @@ export default function TransactionDetailModal({ transaction, onClose, onEdit, o
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -77,6 +79,11 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '100%',
     maxWidth: 400,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
   },
   headerRow: {
     flexDirection: 'row',
@@ -108,9 +115,11 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    borderRadius: 24,
+    flexDirection: 'row',
+    borderRadius: 12,
     paddingVertical: 13,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   editButton: { backgroundColor: colors.primary },
   deleteButton: { backgroundColor: colors.debit },

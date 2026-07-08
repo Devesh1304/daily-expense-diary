@@ -13,8 +13,14 @@ export default function TotalsBar({ creditTotal, debitTotal, closingBalance }: P
   return (
     <View>
       <View style={styles.row}>
-        <Text style={styles.label}>Credit: {formatINR(creditTotal, 2)}</Text>
-        <Text style={styles.label}>Debit: {formatINR(debitTotal, 2)}</Text>
+        <View style={styles.totalItem}>
+          <Text style={styles.totalLabel}>Credit</Text>
+          <Text style={[styles.totalValue, { color: colors.credit }]}>{formatINR(creditTotal, 2)}</Text>
+        </View>
+        <View style={styles.totalItem}>
+          <Text style={styles.totalLabel}>Debit</Text>
+          <Text style={[styles.totalValue, { color: colors.debit }]}>{formatINR(debitTotal, 2)}</Text>
+        </View>
       </View>
       <View style={styles.banner}>
         <Text style={styles.bannerText}>Closing Balance: {formatINR(closingBalance, 2)}</Text>
@@ -26,16 +32,19 @@ export default function TotalsBar({ creditTotal, debitTotal, closingBalance }: P
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     paddingHorizontal: 12,
     paddingVertical: 10,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  label: { fontWeight: '600', color: colors.text },
+  totalItem: { alignItems: 'center' },
+  totalLabel: { fontSize: 12, color: colors.textMuted, marginBottom: 2 },
+  totalValue: { fontWeight: '700', fontSize: 15 },
   banner: {
     backgroundColor: colors.primary,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: 'center',
   },
   bannerText: {

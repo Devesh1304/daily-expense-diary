@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTransactions } from '../context/TransactionsContext';
 import { deleteTransaction } from '../firebase/firestore';
@@ -26,12 +26,21 @@ export default function CashScreen() {
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [modalDirection, setModalDirection] = useState<'credit' | 'debit' | null>(null);
+  const [search, setSearch] = useState('');
 
   const range = filter === 'custom' ? customRange : getDateRange(filter);
 
   const filtered = useMemo(() => {
-    return transactions.filter((t) => isWithinRange(t.date, range));
-  }, [transactions, range]);
+    let list = transactions.filter((t) => isWithinRange(t.date, range));
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((t) =>
+        t.accountName.toLowerCase().includes(q) ||
+        (t.remarks && t.remarks.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [transactions, range, search]);
 
   const sorted = useMemo(() => {
     const list = [...filtered];
@@ -68,7 +77,23 @@ export default function CashScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Cash</Text>
+      <Text style={styles.title}>Transactions</Text>
+
+      <View style={styles.searchRow}>
+        <Ionicons name="search-outline" size={18} color={colors.textMuted} style={{ marginLeft: 14 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name or remarks..."
+          placeholderTextColor={colors.textMuted}
+          value={search}
+          onChangeText={setSearch}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')} style={{ marginRight: 10 }}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
 
       <FilterPills options={FILTER_OPTIONS} value={filter} onChange={setFilter} />
 
@@ -85,12 +110,12 @@ export default function CashScreen() {
 
       <View style={styles.actionRow}>
         <TouchableOpacity style={[styles.actionButton, styles.creditButton]} onPress={() => setModalDirection('credit')}>
-          <Ionicons name="add" size={18} color={colors.text} />
-          <Text style={styles.actionText}>Credit</Text>
+          <Ionicons name="add-circle" size={18} color={colors.credit} />
+          <Text style={[styles.actionText, { color: colors.credit }]}>Credit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionButton, styles.debitButton]} onPress={() => setModalDirection('debit')}>
-          <Ionicons name="remove" size={18} color={colors.text} />
-          <Text style={styles.actionText}>Debit</Text>
+          <Ionicons name="remove-circle" size={18} color={colors.debit} />
+          <Text style={[styles.actionText, { color: colors.debit }]}>Debit</Text>
         </TouchableOpacity>
       </View>
 
@@ -122,7 +147,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     color: colors.text,
-    marginVertical: 12,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    marginHorizontal: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: colors.text,
   },
   customRow: {
     flexDirection: 'row',
@@ -143,13 +186,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.pillBorder,
-    borderRadius: 24,
+    borderRadius: 12,
     paddingVertical: 12,
     gap: 6,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  creditButton: {},
-  debitButton: {},
-  actionText: { fontWeight: '600', color: colors.text },
+  creditButton: {
+    backgroundColor: colors.creditBg,
+    borderWidth: 1,
+    borderColor: '#C3EDDA',
+  },
+  debitButton: {
+    backgroundColor: colors.debitBg,
+    borderWidth: 1,
+    borderColor: '#F5C6C6',
+  },
+  actionText: { fontWeight: '700', fontSize: 14 },
 });

@@ -53,11 +53,11 @@ export default function LedgerDetailScreen({ route, navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={colors.text} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={20} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>{accountName}</Text>
-        <View style={{ width: 22 }} />
+        <View style={{ width: 36 }} />
       </View>
 
       <TransactionTable
@@ -81,6 +81,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     marginVertical: 12,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
   title: { fontSize: 20, fontWeight: '700', color: colors.text },
 });

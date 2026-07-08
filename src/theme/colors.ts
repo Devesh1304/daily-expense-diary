@@ -1,21 +1,26 @@
 export const colors = {
-  primary: '#2C6B54',
-  primaryDark: '#1F4E3D',
-  credit: '#8FD9BE',
-  debit: '#E8A6A0',
-  background: '#12241F',
-  surface: '#1B362E',
-  surfaceAlt: '#20402F',
-  border: '#2A423B',
-  text: '#EAF6F0',
-  textMuted: '#7FBBA6',
-  pillBorder: '#2A423B',
-  buttonOutlineText: '#EAF6F0',
+  primary: '#2E7D5B',
+  primaryLight: '#E8F5EE',
+  primaryGradientStart: '#2E7D5B',
+  primaryGradientEnd: '#1B5E3F',
+  credit: '#1B9E5A',
+  creditBg: '#E6F9EF',
+  debit: '#E04848',
+  debitBg: '#FDE8E8',
+  background: '#F5F7FA',
+  surface: '#FFFFFF',
+  surfaceAlt: '#F0F2F5',
+  border: '#E5E9EF',
+  text: '#1A1D21',
+  textSecondary: '#4A5568',
+  textMuted: '#8896A6',
+  pillBorder: '#D1D9E6',
+  shadow: '#000',
 };
 
 export const avatarPalette = [
-  '#2C6B54', '#4A90D9', '#E85D75', '#7ED321', '#9B59B6',
-  '#F39C12', '#16A085', '#D35400', '#8FD9BE', '#C0392B',
+  '#2E7D5B', '#4A90D9', '#E85D75', '#7ED321', '#9B59B6',
+  '#F39C12', '#16A085', '#D35400', '#3498DB', '#C0392B',
 ];
 
 export function colorForLetter(letter: string): string {

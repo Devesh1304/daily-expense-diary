@@ -58,6 +58,7 @@ export default function TransactionTable({ transactions, sortKey, sortDir, onSor
           <TouchableOpacity
             style={[styles.row, index % 2 === 1 && styles.rowAlt]}
             onPress={() => setViewing(item)}
+            activeOpacity={0.6}
           >
             <Text style={[styles.cell, { flex: 1.1 }]}>{formatDisplayDate(item.date)}</Text>
             <Text style={[styles.cell, { flex: 1.3 }]} numberOfLines={1}>{item.accountName}</Text>
@@ -118,16 +119,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
   headerCell: { flexDirection: 'row', alignItems: 'center' },
-  headerText: { fontWeight: '600', color: colors.text },
+  headerText: { fontWeight: '600', color: colors.textSecondary, fontSize: 13 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 12,
+    backgroundColor: colors.surface,
   },
-  rowAlt: { backgroundColor: colors.surface },
+  rowAlt: { backgroundColor: colors.surfaceAlt },
   cell: { color: colors.text, fontSize: 14 },
   amountCell: { textAlign: 'right' },
   credit: { color: colors.credit },

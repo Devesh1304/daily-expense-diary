@@ -39,6 +39,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   pill: {
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.pillBorder,
     borderRadius: 20,
@@ -51,7 +52,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   label: {
-    color: colors.text,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   labelActive: {

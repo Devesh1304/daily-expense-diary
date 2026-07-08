@@ -44,8 +44,13 @@ export default function SignupScreen({ navigation }: any) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.logo}>Daily Expense Diary</Text>
-      <Text style={styles.subtitle}>Start your expense diary</Text>
+      <View style={styles.logoContainer}>
+        <View style={styles.logoCircle}>
+          <Text style={styles.logoIcon}>$</Text>
+        </View>
+        <Text style={styles.logo}>Daily Expense Diary</Text>
+        <Text style={styles.subtitle}>Start your expense diary</Text>
+      </View>
 
       <TextInput
         style={styles.input}
@@ -77,7 +82,7 @@ export default function SignupScreen({ navigation }: any) {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.link}>Already have an account? Login</Text>
+        <Text style={styles.link}>Already have an account? <Text style={styles.linkBold}>Login</Text></Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
@@ -90,8 +95,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 28,
   },
+  logoContainer: { alignItems: 'center', marginBottom: 32 },
+  logoCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  logoIcon: { fontSize: 28, fontWeight: '800', color: colors.primary },
   logo: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     textAlign: 'center',
     color: colors.text,
@@ -100,12 +116,11 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
     color: colors.textMuted,
-    marginBottom: 32,
   },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 28,
+    borderRadius: 14,
     paddingHorizontal: 20,
     paddingVertical: 14,
     fontSize: 16,
@@ -115,10 +130,15 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: colors.primary,
-    borderRadius: 28,
+    borderRadius: 14,
     paddingVertical: 15,
     alignItems: 'center',
     marginTop: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonText: {
     color: '#fff',
@@ -127,8 +147,11 @@ const styles = StyleSheet.create({
   },
   link: {
     textAlign: 'center',
-    color: colors.credit,
+    color: colors.textMuted,
     marginTop: 20,
-    fontWeight: '600',
+  },
+  linkBold: {
+    color: colors.primary,
+    fontWeight: '700',
   },
 });
