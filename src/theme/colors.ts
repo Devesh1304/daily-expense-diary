@@ -16,6 +16,8 @@ export const colors = {
   textMuted: '#8896A6',
   pillBorder: '#D1D9E6',
   shadow: '#000',
+  topBar: '#FFFFFF',
+  topBarBorder: '#E5E9EF',
 };
 
 export const avatarPalette = [

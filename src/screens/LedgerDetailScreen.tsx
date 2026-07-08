@@ -51,8 +51,8 @@ export default function LedgerDetailScreen({ route, navigation }: any) {
   }
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-      <View style={styles.headerRow}>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={colors.text} />
         </TouchableOpacity>
@@ -74,13 +74,16 @@ export default function LedgerDetailScreen({ route, navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 18 },
-  headerRow: {
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 20 },
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    marginVertical: 12,
+    paddingVertical: 12,
+    backgroundColor: colors.topBar,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.topBarBorder,
   },
   backButton: {
     width: 36,

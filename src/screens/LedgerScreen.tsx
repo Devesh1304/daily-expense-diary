@@ -2,13 +2,18 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTransactions } from '../context/TransactionsContext';
+import { useAuth } from '../context/AuthContext';
+import { deleteLedgerAccount } from '../firebase/firestore';
 import { colors } from '../theme/colors';
 import { formatINR } from '../utils/currency';
 import LedgerAccountRow from '../components/LedgerAccountRow';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function LedgerScreen({ navigation }: any) {
+  const { user } = useAuth();
   const { transactions, ledgerAccounts } = useTransactions();
   const [search, setSearch] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const rows = useMemo(() => {
     let accounts = ledgerAccounts;
@@ -31,8 +36,10 @@ export default function LedgerScreen({ navigation }: any) {
   const totalNegative = rows.filter((r) => r.balance < 0).reduce((s, r) => s + Math.abs(r.balance), 0);
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-      <Text style={styles.title}>Account</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topBar}>
+        <Text style={styles.title}>Account</Text>
+      </View>
 
       <View style={styles.summaryCard}>
         <View style={styles.summaryRow}>
@@ -75,23 +82,42 @@ export default function LedgerScreen({ navigation }: any) {
             credit={item.credit}
             debit={item.debit}
             onPress={() => navigation.navigate('LedgerDetail', { accountId: item.account.id, accountName: item.account.name })}
+            onDelete={() => setDeleteTarget({ id: item.account.id, name: item.account.name })}
           />
         )}
         ListEmptyComponent={<Text style={styles.empty}>No accounts yet — add a transaction to create one.</Text>}
       />
+      {deleteTarget && (
+        <ConfirmDialog
+          visible={!!deleteTarget}
+          title={`Delete "${deleteTarget.name}"?`}
+          message="This will permanently delete this account and all its transactions."
+          onConfirm={() => {
+            if (user) deleteLedgerAccount(deleteTarget.id, user.uid);
+            setDeleteTarget(null);
+          }}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 18 },
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 20 },
+  topBar: {
+    backgroundColor: colors.topBar,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.topBarBorder,
+    marginBottom: 8,
+  },
   title: {
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
     color: colors.text,
-    marginTop: 12,
-    marginBottom: 8,
   },
   summaryCard: {
     marginHorizontal: 12,

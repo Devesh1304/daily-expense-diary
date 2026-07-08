@@ -35,9 +35,9 @@ export default function HomeScreen({ navigation }: any) {
   const maxBar = Math.max(monthCredit, monthDebit, 1);
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
-        <View style={styles.headerRow}>
+        <View style={styles.topBar}>
           <View>
             <Text style={styles.greeting}>{getGreeting()},</Text>
             <Text style={styles.name}>{user?.displayName || user?.email}</Text>
@@ -125,14 +125,17 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 18 },
-  headerRow: {
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 20 },
+  topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 4,
+    paddingTop: 8,
     paddingBottom: 12,
+    backgroundColor: colors.topBar,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.topBarBorder,
   },
   greeting: { color: colors.textMuted, fontSize: 14 },
   name: { color: colors.text, fontSize: 22, fontWeight: '700', marginTop: 2 },

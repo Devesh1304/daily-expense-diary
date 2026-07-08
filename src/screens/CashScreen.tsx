@@ -77,7 +77,9 @@ export default function CashScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Transactions</Text>
+      <View style={styles.topBar}>
+        <Text style={styles.title}>Transactions</Text>
+      </View>
 
       <View style={styles.searchRow}>
         <Ionicons name="search-outline" size={18} color={colors.textMuted} style={{ marginLeft: 14 }} />
@@ -141,14 +143,20 @@ export default function CashScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 18 },
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 20 },
+  topBar: {
+    backgroundColor: colors.topBar,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.topBarBorder,
+    marginBottom: 8,
+  },
   title: {
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
     color: colors.text,
-    marginTop: 8,
-    marginBottom: 8,
   },
   searchRow: {
     flexDirection: 'row',

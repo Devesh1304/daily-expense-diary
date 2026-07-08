@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, colorForLetter } from '../theme/colors';
 import { formatINR } from '../utils/currency';
 
@@ -9,9 +10,10 @@ interface Props {
   credit: number;
   debit: number;
   onPress: () => void;
+  onDelete?: () => void;
 }
 
-export default function LedgerAccountRow({ name, balance, credit, debit, onPress }: Props) {
+export default function LedgerAccountRow({ name, balance, credit, debit, onPress, onDelete }: Props) {
   const letter = name.trim().charAt(0).toUpperCase() || '?';
   const positive = balance >= 0;
 
@@ -29,6 +31,11 @@ export default function LedgerAccountRow({ name, balance, credit, debit, onPress
       <Text style={[styles.balance, positive ? styles.positive : styles.negative]}>
         {positive ? '' : '-'}{formatINR(Math.abs(balance), 2)}
       </Text>
+      {onDelete && (
+        <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Ionicons name="trash-outline" size={18} color={colors.debit} />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }
@@ -64,4 +71,8 @@ const styles = StyleSheet.create({
   balance: { fontWeight: '700', fontSize: 15 },
   positive: { color: colors.credit },
   negative: { color: colors.debit },
+  deleteBtn: {
+    marginLeft: 10,
+    padding: 6,
+  },
 });

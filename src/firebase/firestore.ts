@@ -66,6 +66,18 @@ export function listenToLedgerAccounts(
   });
 }
 
+export async function deleteLedgerAccount(accountId: string, userId: string): Promise<void> {
+  const txQuery = query(
+    collection(db, 'transactions'),
+    where('userId', '==', userId),
+    where('accountId', '==', accountId)
+  );
+  const txSnap = await getDocs(txQuery);
+  const deletes = txSnap.docs.map((d) => deleteDoc(doc(db, 'transactions', d.id)));
+  await Promise.all(deletes);
+  await deleteDoc(doc(db, 'ledgerAccounts', accountId));
+}
+
 export async function updateLedgerAccountCategory(
   accountId: string,
   category: LedgerCategory

@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "com.dailyexpensediary.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#EEF5F0",
         "foregroundImage": "./assets/icon.png"
@@ -38,6 +38,17 @@
         "projectId": "4ad327a3-bffc-4814-b7cf-54a53b667949"
       }
     },
-    "owner": "dgkachhia"
+    "owner": "dgkachhia",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F5F7FA"
+        }
+      ]
+    ]
   }
 }
