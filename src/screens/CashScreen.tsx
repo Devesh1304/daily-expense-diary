@@ -76,7 +76,7 @@ export default function CashScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <Text style={styles.title}>Transactions</Text>
 
       <View style={styles.searchRow}>

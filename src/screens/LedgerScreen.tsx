@@ -31,7 +31,7 @@ export default function LedgerScreen({ navigation }: any) {
   const totalNegative = rows.filter((r) => r.balance < 0).reduce((s, r) => s + Math.abs(r.balance), 0);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <Text style={styles.title}>Account</Text>
 
       <View style={styles.summaryCard}>

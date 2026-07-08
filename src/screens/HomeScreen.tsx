@@ -35,7 +35,7 @@ export default function HomeScreen({ navigation }: any) {
   const maxBar = Math.max(monthCredit, monthDebit, 1);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
           <View>
