@@ -34,6 +34,9 @@ export default function MainTabs() {
         tabBarIcon: ({ color, size }) => (
           <Ionicons name={ICONS[route.name]} size={size} color={color} />
         ),
+        sceneContainerStyle: {
+          paddingBottom: 0,
+        },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

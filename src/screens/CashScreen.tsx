@@ -141,7 +141,7 @@ export default function CashScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20 },
   title: {
     fontSize: 22,
     fontWeight: '700',

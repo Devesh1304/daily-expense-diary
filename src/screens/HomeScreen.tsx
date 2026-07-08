@@ -125,7 +125,7 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20 },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
