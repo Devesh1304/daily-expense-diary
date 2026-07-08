@@ -42,6 +42,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     width: '100%',
     fontFamily: 'inherit',
-    colorScheme: 'dark',
+    colorScheme: 'light',
   } as any,
 });
