@@ -84,7 +84,7 @@ export default function LedgerScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 12 },
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 15 },
   title: {
     fontSize: 22,
     fontWeight: '700',
