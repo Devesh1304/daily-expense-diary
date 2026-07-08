@@ -141,13 +141,13 @@ export default function CashScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20 },
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 12 },
   title: {
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
     color: colors.text,
-    marginTop: 12,
+    marginTop: 8,
     marginBottom: 8,
   },
   searchRow: {

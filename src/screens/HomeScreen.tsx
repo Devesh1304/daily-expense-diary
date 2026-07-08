@@ -125,13 +125,13 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20 },
+  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 12 },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 4,
     paddingBottom: 12,
   },
   greeting: { color: colors.textMuted, fontSize: 14 },
