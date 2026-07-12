@@ -1,16 +1,18 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTransactions } from '../context/TransactionsContext';
 import { deleteTransaction } from '../firebase/firestore';
 import { DateFilter, DateRange } from '../types';
 import { colors } from '../theme/colors';
-import { getDateRange, isWithinRange } from '../utils/dateRanges';
+import { getDateRange, isWithinRange, formatDisplayDate } from '../utils/dateRanges';
+import { exportPdf, exportExcel } from '../utils/exportData';
 import FilterPills, { PillOption } from '../components/FilterPills';
 import DateField from '../components/DateField';
 import TransactionTable, { SortKey } from '../components/TransactionTable';
 import TotalsBar from '../components/TotalsBar';
 import AddTransactionModal from '../components/AddTransactionModal';
+import ExportMenu from '../components/ExportMenu';
 
 const FILTER_OPTIONS: PillOption<DateFilter>[] = [
   { key: 'today', label: 'Today' },
@@ -27,6 +29,8 @@ export default function CashScreen() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [modalDirection, setModalDirection] = useState<'credit' | 'debit' | null>(null);
   const [search, setSearch] = useState('');
+  const [showExport, setShowExport] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const range = filter === 'custom' ? customRange : getDateRange(filter);
 
@@ -75,10 +79,40 @@ export default function CashScreen() {
     }
   }
 
+  const dateLabel = filter === 'custom'
+    ? `${formatDisplayDate(range.start)} - ${formatDisplayDate(range.end)}`
+    : filter === 'today' ? 'Today'
+    : filter === 'week' ? 'This Week'
+    : 'This Month';
+
+  async function handleExport(format: 'pdf' | 'excel') {
+    setShowExport(false);
+    if (sorted.length === 0) {
+      Alert.alert('No data', 'No transactions to export for the selected period.');
+      return;
+    }
+    setExporting(true);
+    try {
+      if (format === 'pdf') {
+        await exportPdf(sorted, creditTotal, debitTotal, closingBalance, dateLabel);
+      } else {
+        await exportExcel(sorted, creditTotal, debitTotal, closingBalance, dateLabel);
+      }
+    } catch (e: any) {
+      Alert.alert('Export failed', e.message || 'Something went wrong.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
+        <View style={{ width: 36 }} />
         <Text style={styles.title}>Transactions</Text>
+        <TouchableOpacity onPress={() => setShowExport(true)} style={styles.exportBtn} disabled={exporting}>
+          <Ionicons name="share-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchRow}>
@@ -138,6 +172,12 @@ export default function CashScreen() {
           direction={modalDirection}
         />
       )}
+
+      <ExportMenu
+        visible={showExport}
+        onClose={() => setShowExport(false)}
+        onSelect={handleExport}
+      />
     </SafeAreaView>
   );
 }
@@ -145,6 +185,9 @@ export default function CashScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 20 },
   topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: colors.topBar,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -157,6 +200,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     color: colors.text,
+  },
+  exportBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchRow: {
     flexDirection: 'row',
