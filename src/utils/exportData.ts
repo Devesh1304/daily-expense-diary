@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system/next';
 import * as XLSX from 'xlsx';
 import { Transaction } from '../types';
 import { formatINR } from './currency';
@@ -91,9 +91,7 @@ export async function exportPdf(
   }
 
   const { uri } = await Print.printToFileAsync({ html });
-  const newUri = `${FileSystem.cacheDirectory}Daily_Expense_Diary.pdf`;
-  await FileSystem.moveAsync({ from: uri, to: newUri });
-  await Sharing.shareAsync(newUri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
+  await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
 }
 
 export async function exportExcel(
@@ -126,9 +124,9 @@ export async function exportExcel(
   }
 
   const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
-  const fileUri = `${FileSystem.cacheDirectory}Daily_Expense_Diary.xlsx`;
-  await FileSystem.writeAsStringAsync(fileUri, wbout, { encoding: FileSystem.EncodingType.Base64 });
-  await Sharing.shareAsync(fileUri, {
+  const file = new File(Paths.cache, 'Daily_Expense_Diary.xlsx');
+  file.write(wbout, { encoding: 'base64' });
+  await Sharing.shareAsync(file.uri, {
     mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }

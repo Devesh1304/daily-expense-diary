@@ -6,6 +6,7 @@ import { useTransactions } from '../context/TransactionsContext';
 import { colors } from '../theme/colors';
 import { formatINR } from '../utils/currency';
 import { getDateRange, isWithinRange, formatDisplayDate } from '../utils/dateRanges';
+import MonthlyBarChart from '../components/MonthlyBarChart';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -81,6 +82,11 @@ export default function HomeScreen({ navigation }: any) {
               <Text style={styles.barAmount}>{formatINR(monthDebit, 2)}</Text>
             </View>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Last 6 Months</Text>
+          <MonthlyBarChart transactions={transactions} />
         </View>
 
         <View style={styles.quickRow}>
