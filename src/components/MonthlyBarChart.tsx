@@ -28,15 +28,16 @@ const TITLE = '#0F172A';
 const TOOLTIP_BG = '#1E293B';
 
 // Layout
-const Y_AXIS_WIDTH = 44;
+const Y_AXIS_WIDTH = 40;
 const PLOT_TOP = 24;
 const PLOT_HEIGHT = 140;
 const X_LABEL_HEIGHT = 24;
 const CHART_HEIGHT = PLOT_TOP + PLOT_HEIGHT + X_LABEL_HEIGHT;
-const BAR_WIDTH = 14;
-const BAR_SPACING = 4;
-const PAIR_WIDTH = BAR_WIDTH * 2 + BAR_SPACING;
-const BAR_RADIUS = 5;
+const MONTH_GAP = 6; // space between neighbouring months
+const PAIR_GAP = 4; // space between the credit and debit bar of one month
+const MIN_BAR_WIDTH = 14;
+const MAX_BAR_WIDTH = 26;
+const BAR_RADIUS = 6;
 const MIN_BAR_HEIGHT = 2;
 const TOOLTIP_WIDTH = 176;
 
@@ -115,6 +116,10 @@ export default function MonthlyBarChart({ transactions }: Props) {
   const plotLeft = Y_AXIS_WIDTH;
   const plotWidth = Math.max(chartWidth - plotLeft, 0);
   const groupWidth = plotWidth / 6;
+  // Bar width adapts to the available width, within the min/max range.
+  const barWidth = Math.min(MAX_BAR_WIDTH, Math.max(MIN_BAR_WIDTH, (groupWidth - MONTH_GAP - PAIR_GAP) / 2));
+  const pairWidth = barWidth * 2 + PAIR_GAP;
+  const pairOffset = (groupWidth - pairWidth) / 2;
   const baseline = PLOT_TOP + PLOT_HEIGHT;
 
   const yFor = (v: number) => baseline - (v / maxValue) * PLOT_HEIGHT;
@@ -154,9 +159,9 @@ export default function MonthlyBarChart({ transactions }: Props) {
               {/* Highlight column for the selected month */}
               {selected !== null && (
                 <Rect
-                  x={plotLeft + selected * groupWidth + 3}
+                  x={plotLeft + selected * groupWidth + pairOffset - 4}
                   y={0}
-                  width={groupWidth - 6}
+                  width={pairWidth + 8}
                   height={baseline}
                   rx={8}
                   fill="#F1F5F9"
@@ -190,9 +195,8 @@ export default function MonthlyBarChart({ transactions }: Props) {
               {/* Bars, value labels and month labels */}
               {months.map((m, i) => {
                 const groupX = plotLeft + i * groupWidth;
-                const pairX = groupX + (groupWidth - PAIR_WIDTH) / 2;
-                const creditX = pairX;
-                const debitX = pairX + BAR_WIDTH + BAR_SPACING;
+                const creditX = groupX + pairOffset;
+                const debitX = creditX + barWidth + PAIR_GAP;
                 const creditH = barHeight(m.credit);
                 const debitH = barHeight(m.debit);
                 const dimmed = selected !== null && selected !== i;
@@ -201,17 +205,17 @@ export default function MonthlyBarChart({ transactions }: Props) {
                 return (
                   <React.Fragment key={m.full}>
                     <Path
-                      d={topRoundedBar(creditX, baseline - creditH, BAR_WIDTH, creditH, BAR_RADIUS)}
+                      d={topRoundedBar(creditX, baseline - creditH, barWidth, creditH, BAR_RADIUS)}
                       fill={m.credit > 0 ? CREDIT : CREDIT_CAP}
                       opacity={opacity}
                     />
                     <Path
-                      d={topRoundedBar(debitX, baseline - debitH, BAR_WIDTH, debitH, BAR_RADIUS)}
+                      d={topRoundedBar(debitX, baseline - debitH, barWidth, debitH, BAR_RADIUS)}
                       fill={m.debit > 0 ? DEBIT : DEBIT_CAP}
                       opacity={opacity}
                     />
                     <SvgText
-                      x={creditX + BAR_WIDTH / 2}
+                      x={creditX + barWidth / 2}
                       y={baseline - creditH - 5}
                       fontSize={9}
                       fontWeight="600"
@@ -222,7 +226,7 @@ export default function MonthlyBarChart({ transactions }: Props) {
                       {m.credit > 0 ? formatAxis(m.credit) : '₹0'}
                     </SvgText>
                     <SvgText
-                      x={debitX + BAR_WIDTH / 2}
+                      x={debitX + barWidth / 2}
                       y={baseline - debitH - 5}
                       fontSize={9}
                       fontWeight="600"
