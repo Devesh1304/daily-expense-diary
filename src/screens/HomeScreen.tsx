@@ -85,7 +85,6 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Last 6 Months</Text>
           <MonthlyBarChart transactions={transactions} />
         </View>
 
