@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Transaction } from '../types';
-import { colors } from '../theme/colors';
+import { Palette } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { formatINR } from '../utils/currency';
 import { formatDisplayDate } from '../utils/dateRanges';
 import ConfirmDialog from './ConfirmDialog';
@@ -27,6 +28,8 @@ const COLUMNS: { key: SortKey; label: string; flex: number }[] = [
 ];
 
 export default function TransactionTable({ transactions, sortKey, sortDir, onSortChange, onDelete }: Props) {
+  const { palette: c } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [viewing, setViewing] = useState<Transaction | null>(null);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
@@ -44,7 +47,7 @@ export default function TransactionTable({ transactions, sortKey, sortDir, onSor
             <Ionicons
               name={sortKey === col.key ? (sortDir === 'asc' ? 'chevron-up' : 'chevron-down') : 'swap-vertical'}
               size={14}
-              color={colors.textMuted}
+              color={c.textMuted}
               style={{ marginLeft: 4 }}
             />
           </TouchableOpacity>
@@ -54,6 +57,7 @@ export default function TransactionTable({ transactions, sortKey, sortDir, onSor
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
         renderItem={({ item, index }) => (
           <TouchableOpacity
             style={[styles.row, index % 2 === 1 && styles.rowAlt]}
@@ -111,33 +115,35 @@ export default function TransactionTable({ transactions, sortKey, sortDir, onSor
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  headerRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  headerCell: { flexDirection: 'row', alignItems: 'center' },
-  headerText: { fontWeight: '600', color: colors.textSecondary, fontSize: 13 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.surface,
-  },
-  rowAlt: { backgroundColor: colors.surfaceAlt },
-  cell: { color: colors.text, fontSize: 14 },
-  amountCell: { textAlign: 'right' },
-  credit: { color: colors.credit },
-  debit: { color: colors.debit },
-  empty: {
-    textAlign: 'center',
-    color: colors.textMuted,
-    marginTop: 40,
-  },
-});
+function makeStyles(c: Palette) {
+  return StyleSheet.create({
+    container: { flex: 1 },
+    headerRow: {
+      flexDirection: 'row',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+      backgroundColor: c.surface,
+    },
+    headerCell: { flexDirection: 'row', alignItems: 'center' },
+    headerText: { fontWeight: '600', color: c.textSecondary, fontSize: 13 },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      backgroundColor: c.surface,
+    },
+    rowAlt: { backgroundColor: c.surfaceAlt },
+    cell: { color: c.text, fontSize: 14 },
+    amountCell: { textAlign: 'right' },
+    credit: { color: c.credit },
+    debit: { color: c.debit },
+    empty: {
+      textAlign: 'center',
+      color: c.textMuted,
+      marginTop: 40,
+    },
+  });
+}

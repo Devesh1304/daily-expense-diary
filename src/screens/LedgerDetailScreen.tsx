@@ -3,11 +3,14 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { useTransactions } from '../context/TransactionsContext';
 import { deleteTransaction } from '../firebase/firestore';
-import { colors } from '../theme/colors';
+import { Palette } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import TransactionTable, { SortKey } from '../components/TransactionTable';
 import TotalsBar from '../components/TotalsBar';
 
 export default function LedgerDetailScreen({ route, navigation }: any) {
+  const { palette: c } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { accountId, accountName } = route.params;
   const { transactions } = useTransactions();
   const [sortKey, setSortKey] = useState<SortKey>('date');
@@ -54,7 +57,7 @@ export default function LedgerDetailScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color={colors.text} />
+          <Ionicons name="arrow-back" size={20} color={c.text} />
         </TouchableOpacity>
         <Text style={styles.title}>{accountName}</Text>
         <View style={{ width: 36 }} />
@@ -73,30 +76,32 @@ export default function LedgerDetailScreen({ route, navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 20 },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.topBar,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.topBarBorder,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  title: { fontSize: 20, fontWeight: '700', color: colors.text },
-});
+function makeStyles(c: Palette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background, paddingBottom: 20, paddingTop: 20 },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      backgroundColor: c.topBar,
+      borderBottomWidth: 1,
+      borderBottomColor: c.topBarBorder,
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: c.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    title: { fontSize: 20, fontWeight: '700', color: c.text },
+  });
+}

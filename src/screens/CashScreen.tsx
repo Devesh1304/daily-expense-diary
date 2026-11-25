@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTransactions } from '../context/TransactionsContext';
 import { deleteTransaction } from '../firebase/firestore';
 import { DateFilter, DateRange } from '../types';
-import { colors } from '../theme/colors';
+import { Palette } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { getDateRange, isWithinRange, formatDisplayDate } from '../utils/dateRanges';
 import { exportPdf, exportExcel } from '../utils/exportData';
 import FilterPills, { PillOption } from '../components/FilterPills';
@@ -22,6 +23,8 @@ const FILTER_OPTIONS: PillOption<DateFilter>[] = [
 ];
 
 export default function CashScreen() {
+  const { palette: c } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { transactions } = useTransactions();
   const [filter, setFilter] = useState<DateFilter>('month');
   const [customRange, setCustomRange] = useState<DateRange>(getDateRange('month'));
@@ -111,22 +114,22 @@ export default function CashScreen() {
         <View style={{ width: 36 }} />
         <Text style={styles.title}>Transactions</Text>
         <TouchableOpacity onPress={() => setShowExport(true)} style={styles.exportBtn} disabled={exporting}>
-          <Ionicons name="share-outline" size={20} color={colors.primary} />
+          <Ionicons name="share-outline" size={20} color={c.primary} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.searchRow}>
-        <Ionicons name="search-outline" size={18} color={colors.textMuted} style={{ marginLeft: 14 }} />
+        <Ionicons name="search-outline" size={18} color={c.textMuted} style={{ marginLeft: 14 }} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name or remarks..."
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={search}
           onChangeText={setSearch}
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')} style={{ marginRight: 10 }}>
-            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+            <Ionicons name="close-circle" size={18} color={c.textMuted} />
           </TouchableOpacity>
         )}
       </View>
@@ -146,12 +149,12 @@ export default function CashScreen() {
 
       <View style={styles.actionRow}>
         <TouchableOpacity style={[styles.actionButton, styles.creditButton]} onPress={() => setModalDirection('credit')}>
-          <Ionicons name="add-circle" size={18} color={colors.credit} />
-          <Text style={[styles.actionText, { color: colors.credit }]}>Credit</Text>
+          <Ionicons name="add-circle" size={18} color={c.credit} />
+          <Text style={[styles.actionText, { color: c.credit }]}>Credit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionButton, styles.debitButton]} onPress={() => setModalDirection('debit')}>
-          <Ionicons name="remove-circle" size={18} color={colors.debit} />
-          <Text style={[styles.actionText, { color: colors.debit }]}>Debit</Text>
+          <Ionicons name="remove-circle" size={18} color={c.debit} />
+          <Text style={[styles.actionText, { color: c.debit }]}>Debit</Text>
         </TouchableOpacity>
       </View>
 
@@ -182,87 +185,89 @@ export default function CashScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 20 },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.topBar,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.topBarBorder,
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
-    color: colors.text,
-  },
-  exportBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    marginHorizontal: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  searchInput: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: colors.text,
-  },
-  customRow: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
-  customField: { flex: 1 },
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    marginBottom: 10,
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    paddingVertical: 12,
-    gap: 6,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  creditButton: {
-    backgroundColor: colors.creditBg,
-    borderWidth: 1,
-    borderColor: '#C3EDDA',
-  },
-  debitButton: {
-    backgroundColor: colors.debitBg,
-    borderWidth: 1,
-    borderColor: '#F5C6C6',
-  },
-  actionText: { fontWeight: '700', fontSize: 14 },
-});
+function makeStyles(c: Palette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background, paddingBottom: 20, paddingTop: 20 },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: c.topBar,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.topBarBorder,
+      marginBottom: 8,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: '700',
+      textAlign: 'center',
+      color: c.text,
+    },
+    exportBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: c.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.surface,
+      borderRadius: 12,
+      marginHorizontal: 12,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    searchInput: {
+      flex: 1,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      fontSize: 14,
+      color: c.text,
+    },
+    customRow: {
+      flexDirection: 'row',
+      gap: 10,
+      paddingHorizontal: 12,
+      marginBottom: 8,
+    },
+    customField: { flex: 1 },
+    actionRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 12,
+      marginBottom: 10,
+      gap: 12,
+    },
+    actionButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      paddingVertical: 12,
+      gap: 6,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    creditButton: {
+      backgroundColor: c.creditBg,
+      borderWidth: 1,
+      borderColor: c.creditBorder,
+    },
+    debitButton: {
+      backgroundColor: c.debitBg,
+      borderWidth: 1,
+      borderColor: c.debitBorder,
+    },
+    actionText: { fontWeight: '700', fontSize: 14 },
+  });
+}

@@ -18,6 +18,34 @@ export const colors = {
   shadow: '#000',
   topBar: '#FFFFFF',
   topBarBorder: '#E5E9EF',
+  creditBorder: '#C3EDDA',
+  debitBorder: '#F5C6C6',
+};
+
+export type Palette = typeof colors;
+
+export const darkColors: Palette = {
+  primary: '#3FA77B',
+  primaryLight: '#1C2E26',
+  primaryGradientStart: '#3FA77B',
+  primaryGradientEnd: '#2E7D5B',
+  credit: '#34D399',
+  creditBg: '#0F2E22',
+  debit: '#F87171',
+  debitBg: '#3A1A1A',
+  background: '#0F172A',
+  surface: '#1E293B',
+  surfaceAlt: '#273449',
+  border: '#334155',
+  text: '#F1F5F9',
+  textSecondary: '#CBD5E1',
+  textMuted: '#94A3B8',
+  pillBorder: '#475569',
+  shadow: '#000',
+  topBar: '#1E293B',
+  topBarBorder: '#334155',
+  creditBorder: '#1F5A40',
+  debitBorder: '#6B2C2C',
 };
 
 export const avatarPalette = [

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { colors } from '../theme/colors';
+import { Palette } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { formatDisplayDate } from '../utils/dateRanges';
 
 interface Props {
@@ -11,13 +12,15 @@ interface Props {
 }
 
 export default function DateField({ value, onChange }: Props) {
+  const { palette: c } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [showPicker, setShowPicker] = useState(false);
 
   return (
     <View>
       <TouchableOpacity style={styles.field} onPress={() => setShowPicker(true)}>
         <Text style={styles.text}>{formatDisplayDate(value)}</Text>
-        <Ionicons name="calendar-outline" size={20} color={colors.text} />
+        <Ionicons name="calendar-outline" size={20} color={c.text} />
       </TouchableOpacity>
       {showPicker && (
         <DateTimePicker
@@ -39,17 +42,19 @@ export default function DateField({ value, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  field: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.background,
-  },
-  text: { fontSize: 15, color: colors.text },
-});
+function makeStyles(c: Palette) {
+  return StyleSheet.create({
+    field: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: c.background,
+    },
+    text: { fontSize: 15, color: c.text },
+  });
+}

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Transaction } from '../types';
-import { colors } from '../theme/colors';
+import { Palette } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { formatINR } from '../utils/currency';
 import { formatDisplayDate } from '../utils/dateRanges';
 
@@ -14,6 +15,9 @@ interface Props {
 }
 
 function DetailRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  const { palette: c } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
+
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -24,6 +28,9 @@ function DetailRow({ label, value, valueColor }: { label: string; value: string;
 }
 
 export default function TransactionDetailModal({ transaction, onClose, onEdit, onDelete }: Props) {
+  const { palette: c } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
+
   if (!transaction) return null;
 
   return (
@@ -33,7 +40,7 @@ export default function TransactionDetailModal({ transaction, onClose, onEdit, o
           <View style={styles.headerRow}>
             <Text style={styles.title}>Transaction Details</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={22} color={colors.textSecondary} />
+              <Ionicons name="close" size={22} color={c.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -41,7 +48,7 @@ export default function TransactionDetailModal({ transaction, onClose, onEdit, o
             <DetailRow
               label="Type"
               value={transaction.direction === 'credit' ? 'Credit' : 'Debit'}
-              valueColor={transaction.direction === 'credit' ? colors.credit : colors.debit}
+              valueColor={transaction.direction === 'credit' ? c.credit : c.debit}
             />
             <DetailRow label="Date" value={formatDisplayDate(transaction.date)} />
             <DetailRow label="Amount" value={formatINR(transaction.amount, 2)} />
@@ -65,63 +72,65 @@ export default function TransactionDetailModal({ transaction, onClose, onEdit, o
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 20,
-    width: '100%',
-    maxWidth: 400,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: { fontSize: 18, fontWeight: '700', color: colors.text },
-  detailBox: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 20,
-  },
-  row: {
-    flexDirection: 'row',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  rowLabel: { width: 90, color: colors.textMuted, fontSize: 14 },
-  rowColon: { width: 14, color: colors.textMuted, fontSize: 14 },
-  rowValue: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '500' },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    flexDirection: 'row',
-    borderRadius: 12,
-    paddingVertical: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editButton: { backgroundColor: colors.primary },
-  deleteButton: { backgroundColor: colors.debit },
-  buttonText: { color: '#fff', fontWeight: '700' },
-});
+function makeStyles(c: Palette) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.35)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: 20,
+      padding: 20,
+      width: '100%',
+      maxWidth: 400,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 16,
+      elevation: 8,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    title: { fontSize: 18, fontWeight: '700', color: c.text },
+    detailBox: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 14,
+      overflow: 'hidden',
+      marginBottom: 20,
+    },
+    row: {
+      flexDirection: 'row',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    rowLabel: { width: 90, color: c.textMuted, fontSize: 14 },
+    rowColon: { width: 14, color: c.textMuted, fontSize: 14 },
+    rowValue: { flex: 1, color: c.text, fontSize: 14, fontWeight: '500' },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    button: {
+      flex: 1,
+      flexDirection: 'row',
+      borderRadius: 12,
+      paddingVertical: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    editButton: { backgroundColor: c.primary },
+    deleteButton: { backgroundColor: c.debit },
+    buttonText: { color: '#fff', fontWeight: '700' },
+  });
+}

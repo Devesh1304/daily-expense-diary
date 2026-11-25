@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, LayoutChangeEvent } from 'react-nati
 import Svg, { Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { Transaction } from '../types';
 import { formatINR } from '../utils/currency';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Props {
   transactions: Transaction[];
@@ -22,9 +23,6 @@ const CREDIT_TEXT = '#059669';
 const DEBIT_TEXT = '#DC2626';
 const CREDIT_CAP = '#A7F3D0';
 const DEBIT_CAP = '#FECACA';
-const GRID = '#E2E8F0';
-const AXIS_TEXT = '#64748B';
-const TITLE = '#0F172A';
 const TOOLTIP_BG = '#1E293B';
 
 // Layout
@@ -98,6 +96,7 @@ function topRoundedBar(x: number, y: number, w: number, h: number, r: number): s
 }
 
 export default function MonthlyBarChart({ transactions }: Props) {
+  const { palette: c } = useTheme();
   const [chartWidth, setChartWidth] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -139,15 +138,15 @@ export default function MonthlyBarChart({ transactions }: Props) {
   const net = active ? active.credit - active.debit : 0;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: c.surface }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Last 6 Months</Text>
+        <Text style={[styles.title, { color: c.text }]}>Last 6 Months</Text>
         <View style={styles.pills}>
-          <View style={[styles.pill, { backgroundColor: '#ECFDF5' }]}>
-            <Text style={[styles.pillText, { color: CREDIT_TEXT }]}>Cr {formatAxis(totalCredit)}</Text>
+          <View style={[styles.pill, { backgroundColor: c.creditBg }]}>
+            <Text style={[styles.pillText, { color: c.credit }]}>Cr {formatAxis(totalCredit)}</Text>
           </View>
-          <View style={[styles.pill, { backgroundColor: '#FEF2F2' }]}>
-            <Text style={[styles.pillText, { color: DEBIT_TEXT }]}>Dr {formatAxis(totalDebit)}</Text>
+          <View style={[styles.pill, { backgroundColor: c.debitBg }]}>
+            <Text style={[styles.pillText, { color: c.debit }]}>Dr {formatAxis(totalDebit)}</Text>
           </View>
         </View>
       </View>
@@ -164,7 +163,7 @@ export default function MonthlyBarChart({ transactions }: Props) {
                   width={pairWidth + 8}
                   height={baseline}
                   rx={8}
-                  fill="#F1F5F9"
+                  fill={c.surfaceAlt}
                 />
               )}
 
@@ -176,7 +175,7 @@ export default function MonthlyBarChart({ transactions }: Props) {
                     x2={chartWidth}
                     y1={yFor(tick)}
                     y2={yFor(tick)}
-                    stroke={GRID}
+                    stroke={c.border}
                     strokeWidth={1}
                     strokeDasharray={[4, 4]}
                   />
@@ -184,7 +183,7 @@ export default function MonthlyBarChart({ transactions }: Props) {
                     x={plotLeft - 6}
                     y={yFor(tick) + 4}
                     fontSize={11}
-                    fill={AXIS_TEXT}
+                    fill={c.textMuted}
                     textAnchor="end"
                   >
                     {formatAxis(tick)}
@@ -241,7 +240,7 @@ export default function MonthlyBarChart({ transactions }: Props) {
                       y={baseline + 16}
                       fontSize={11}
                       fontWeight="600"
-                      fill={selected === i ? TITLE : AXIS_TEXT}
+                      fill={selected === i ? c.text : c.textMuted}
                       textAnchor="middle"
                     >
                       {m.short}
@@ -290,7 +289,7 @@ export default function MonthlyBarChart({ transactions }: Props) {
         )}
       </View>
 
-      <Text style={styles.hint}>Tap a month to see details</Text>
+      <Text style={[styles.hint, { color: c.textMuted }]}>Tap a month to see details</Text>
     </View>
   );
 }
@@ -313,7 +312,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  title: { fontSize: 16, fontWeight: '700', color: TITLE },
+  title: { fontSize: 16, fontWeight: '700' },
   pills: { flexDirection: 'row', gap: 6 },
   pill: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   pillText: { fontSize: 11, fontWeight: '700' },
@@ -339,5 +338,5 @@ const styles = StyleSheet.create({
   tooltipLabel: { color: '#CBD5E1', fontSize: 11, flex: 1 },
   tooltipValue: { fontSize: 11, fontWeight: '700' },
   tooltipDivider: { height: 1, backgroundColor: '#334155', marginVertical: 6 },
-  hint: { fontSize: 11, color: AXIS_TEXT, textAlign: 'center', marginTop: 6 },
+  hint: { fontSize: 11, textAlign: 'center', marginTop: 6 },
 });

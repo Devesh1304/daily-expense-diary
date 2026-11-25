@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -16,7 +16,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionsContext';
 import { createTransaction, updateTransactionWithAccount } from '../firebase/firestore';
 import { Direction, Transaction } from '../types';
-import { colors } from '../theme/colors';
+import { Palette } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { todayString } from '../utils/dateRanges';
 import DateField from './DateField';
 
@@ -28,6 +29,8 @@ interface Props {
 }
 
 export default function AddTransactionModal({ visible, onClose, direction, existingTransaction }: Props) {
+  const { palette: c } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { user } = useAuth();
   const { ledgerAccounts } = useTransactions();
   const isEditing = !!existingTransaction;
@@ -99,25 +102,25 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <KeyboardAvoidingView
-          style={styles.sheet}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.sheet}>
           <View style={styles.handle} />
           <View style={styles.headerRow}>
             <Text style={styles.title}>{isEditing ? 'Edit Transaction' : 'Add Transaction'}</Text>
             <TouchableOpacity onPress={() => { reset(); onClose(); }} style={styles.closeButton}>
-              <Ionicons name="close" size={20} color={colors.textSecondary} />
+              <Ionicons name="close" size={20} color={c.textSecondary} />
             </TouchableOpacity>
           </View>
           <View style={[styles.directionBadge, direction === 'credit' ? styles.creditBadge : styles.debitBadge]}>
             <Ionicons
               name={direction === 'credit' ? 'arrow-down' : 'arrow-up'}
               size={14}
-              color={direction === 'credit' ? colors.credit : colors.debit}
+              color={direction === 'credit' ? c.credit : c.debit}
             />
-            <Text style={[styles.directionText, { color: direction === 'credit' ? colors.credit : colors.debit }]}>
+            <Text style={[styles.directionText, { color: direction === 'credit' ? c.credit : c.debit }]}>
               {direction === 'credit' ? 'Credit' : 'Debit'}
             </Text>
           </View>
@@ -130,7 +133,7 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
             <TextInput
               style={styles.input}
               placeholder="Enter amount"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
               keyboardType="numeric"
               value={amount}
               onChangeText={setAmount}
@@ -140,7 +143,7 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
             <TextInput
               style={styles.input}
               placeholder="Enter name"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
               value={name}
               onChangeText={setName}
             />
@@ -158,7 +161,7 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
             <TextInput
               style={styles.input}
               placeholder="Add remarks"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
               value={remarks}
               onChangeText={setRemarks}
             />
@@ -182,102 +185,104 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: '90%',
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginBottom: 12,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: { fontSize: 20, fontWeight: '700', color: colors.text },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  directionBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginVertical: 10,
-    gap: 4,
-  },
-  creditBadge: { backgroundColor: colors.creditBg },
-  debitBadge: { backgroundColor: colors.debitBg },
-  directionText: { fontWeight: '700', fontSize: 14 },
-  label: { marginTop: 14, marginBottom: 6, color: colors.textSecondary, fontWeight: '500', fontSize: 13 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    backgroundColor: colors.surfaceAlt,
-    color: colors.text,
-  },
-  suggestions: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    marginTop: 4,
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-  },
-  suggestionRow: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  suggestionText: {
-    color: colors.text,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  button: {
-    flex: 1,
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  primaryButton: { backgroundColor: colors.primary },
-  primaryButtonText: { color: '#fff', fontWeight: '700' },
-  secondaryButton: { borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.surface },
-  secondaryButtonText: { color: colors.primary, fontWeight: '700' },
-});
+function makeStyles(c: Palette) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.35)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: c.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 20,
+      maxHeight: '90%',
+    },
+    handle: {
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: c.border,
+      alignSelf: 'center',
+      marginBottom: 12,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    title: { fontSize: 20, fontWeight: '700', color: c.text },
+    closeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: c.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    directionBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 20,
+      marginVertical: 10,
+      gap: 4,
+    },
+    creditBadge: { backgroundColor: c.creditBg },
+    debitBadge: { backgroundColor: c.debitBg },
+    directionText: { fontWeight: '700', fontSize: 14 },
+    label: { marginTop: 14, marginBottom: 6, color: c.textSecondary, fontWeight: '500', fontSize: 13 },
+    input: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 15,
+      backgroundColor: c.surfaceAlt,
+      color: c.text,
+    },
+    suggestions: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 12,
+      marginTop: 4,
+      overflow: 'hidden',
+      backgroundColor: c.surface,
+    },
+    suggestionRow: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    suggestionText: {
+      color: c.text,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 24,
+      marginBottom: 12,
+    },
+    button: {
+      flex: 1,
+      borderRadius: 14,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    primaryButton: { backgroundColor: c.primary },
+    primaryButtonText: { color: '#fff', fontWeight: '700' },
+    secondaryButton: { borderWidth: 1.5, borderColor: c.primary, backgroundColor: c.surface },
+    secondaryButtonText: { color: c.primary, fontWeight: '700' },
+  });
+}

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeScreen from '../screens/HomeScreen';
 import CashScreen from '../screens/CashScreen';
 import LedgerStack from './LedgerStack';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,16 +17,17 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 
 export default function MainTabs() {
   const insets = useSafeAreaInsets();
+  const { palette: c } = useTheme();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: c.primary,
+        tabBarInactiveTintColor: c.textMuted,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
+          backgroundColor: c.surface,
+          borderTopColor: c.border,
           paddingTop: 4,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           height: 60 + insets.bottom,

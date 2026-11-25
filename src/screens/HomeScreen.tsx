@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } fr
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionsContext';
-import { colors } from '../theme/colors';
+import { Palette } from '../theme/colors';
+import { ThemeMode, useTheme } from '../theme/ThemeContext';
 import { formatINR } from '../utils/currency';
 import { getDateRange, isWithinRange, formatDisplayDate } from '../utils/dateRanges';
 import MonthlyBarChart from '../components/MonthlyBarChart';
@@ -15,9 +16,17 @@ function getGreeting(): string {
   return 'Good Evening';
 }
 
+const THEME_OPTIONS: { key: ThemeMode; icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
+  { key: 'light', icon: 'sunny-outline', label: 'Light theme' },
+  { key: 'dark', icon: 'moon-outline', label: 'Dark theme' },
+  { key: 'system', icon: 'phone-portrait-outline', label: 'System theme' },
+];
+
 export default function HomeScreen({ navigation }: any) {
   const { user, signOut } = useAuth();
   const { transactions } = useTransactions();
+  const { palette: c, mode, setMode } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
 
   const { cashBalance, monthCredit, monthDebit, recentTxns } = useMemo(() => {
     const credit = transactions.filter((t) => t.direction === 'credit').reduce((s, t) => s + t.amount, 0);
@@ -39,13 +48,37 @@ export default function HomeScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>{getGreeting()},</Text>
-            <Text style={styles.name}>{user?.displayName || user?.email}</Text>
+            <Text style={styles.name} numberOfLines={1}>{user?.displayName || user?.email}</Text>
           </View>
-          <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={22} color={colors.textSecondary} />
-          </TouchableOpacity>
+          <View style={styles.topBarActions}>
+            <View style={styles.themeSwitch} accessibilityRole="radiogroup">
+              {THEME_OPTIONS.map((opt) => {
+                const active = mode === opt.key;
+                return (
+                  <TouchableOpacity
+                    key={opt.key}
+                    onPress={() => setMode(opt.key)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={opt.label}
+                    style={[styles.themeOption, active && styles.themeOptionActive]}
+                    hitSlop={{ top: 4, bottom: 4, left: 2, right: 2 }}
+                  >
+                    <Ionicons
+                      name={opt.icon}
+                      size={16}
+                      color={active ? c.primary : c.textMuted}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={22} color={c.textSecondary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TouchableOpacity
@@ -63,7 +96,7 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.barCard}>
             <View style={styles.barRow}>
               <View style={styles.barLabelRow}>
-                <View style={[styles.barDot, { backgroundColor: colors.credit }]} />
+                <View style={[styles.barDot, { backgroundColor: c.credit }]} />
                 <Text style={styles.barLabel}>Credit</Text>
               </View>
               <View style={styles.barTrack}>
@@ -73,7 +106,7 @@ export default function HomeScreen({ navigation }: any) {
             </View>
             <View style={styles.barRow}>
               <View style={styles.barLabelRow}>
-                <View style={[styles.barDot, { backgroundColor: colors.debit }]} />
+                <View style={[styles.barDot, { backgroundColor: c.debit }]} />
                 <Text style={styles.barLabel}>Debit</Text>
               </View>
               <View style={styles.barTrack}>
@@ -94,7 +127,7 @@ export default function HomeScreen({ navigation }: any) {
             <Text style={styles.quickButtonText}>Add Entry</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.quickButton, styles.quickButtonOutline]} onPress={() => navigation.navigate('Account')}>
-            <Ionicons name="swap-horizontal-outline" size={20} color={colors.primary} />
+            <Ionicons name="swap-horizontal-outline" size={20} color={c.primary} />
             <Text style={[styles.quickButtonText, styles.quickButtonOutlineText]}>View Account</Text>
           </TouchableOpacity>
         </View>
@@ -109,7 +142,7 @@ export default function HomeScreen({ navigation }: any) {
                     <Ionicons
                       name={t.direction === 'credit' ? 'arrow-down' : 'arrow-up'}
                       size={16}
-                      color={t.direction === 'credit' ? colors.credit : colors.debit}
+                      color={t.direction === 'credit' ? c.credit : c.debit}
                     />
                   </View>
                   <View style={styles.recentInfo}>
@@ -129,140 +162,166 @@ export default function HomeScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingBottom: 20, paddingTop: 20 },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-    backgroundColor: colors.topBar,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.topBarBorder,
-  },
-  greeting: { color: colors.textMuted, fontSize: 14 },
-  name: { color: colors.text, fontSize: 22, fontWeight: '700', marginTop: 2 },
-  logoutButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  balanceCard: {
-    marginHorizontal: 16,
-    backgroundColor: colors.primary,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  balanceLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '500' },
-  balanceValue: { color: '#fff', fontSize: 32, fontWeight: '800', marginTop: 8 },
-  balanceHint: { color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 8 },
-  section: { marginTop: 20, paddingHorizontal: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 10 },
-  barCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  barRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  barLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: 65,
-  },
-  barDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
-  barLabel: { fontSize: 13, color: colors.textSecondary },
-  barTrack: {
-    flex: 1,
-    height: 8,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 4,
-    marginHorizontal: 8,
-    overflow: 'hidden',
-  },
-  barFill: { height: 8, borderRadius: 4, minWidth: 4 },
-  barCredit: { backgroundColor: colors.credit },
-  barDebit: { backgroundColor: colors.debit },
-  barAmount: { fontSize: 13, fontWeight: '600', color: colors.text, width: 80, textAlign: 'right' },
-  quickRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
-    paddingHorizontal: 16,
-  },
-  quickButton: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  quickButtonOutline: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.06,
-  },
-  quickButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  quickButtonOutlineText: { color: colors.primary },
-  recentCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 4,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  recentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  recentRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
-  recentIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  recentIconCredit: { backgroundColor: colors.creditBg },
-  recentIconDebit: { backgroundColor: colors.debitBg },
-  recentInfo: { flex: 1 },
-  recentName: { fontSize: 14, fontWeight: '600', color: colors.text },
-  recentDate: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  recentAmount: { fontSize: 14, fontWeight: '700' },
-  recentCredit: { color: colors.credit },
-  recentDebit: { color: colors.debit },
-});
+function makeStyles(c: Palette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background, paddingBottom: 20, paddingTop: 20 },
+    topBar: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
+      backgroundColor: c.topBar,
+      borderBottomWidth: 1,
+      borderBottomColor: c.topBarBorder,
+    },
+    topBarActions: { flexDirection: 'row', alignItems: 'center', gap: 10, marginLeft: 12 },
+    themeSwitch: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.surfaceAlt,
+      borderRadius: 20,
+      padding: 3,
+      gap: 2,
+    },
+    themeOption: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    themeOptionActive: {
+      backgroundColor: c.surface,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    greeting: { color: c.textMuted, fontSize: 14 },
+    name: { color: c.text, fontSize: 22, fontWeight: '700', marginTop: 2 },
+    logoutButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: c.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    balanceCard: {
+      marginHorizontal: 16,
+      backgroundColor: c.primary,
+      borderRadius: 20,
+      padding: 24,
+      shadowColor: c.primary,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    balanceLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '500' },
+    balanceValue: { color: '#fff', fontSize: 32, fontWeight: '800', marginTop: 8 },
+    balanceHint: { color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 8 },
+    section: { marginTop: 20, paddingHorizontal: 16 },
+    sectionTitle: { fontSize: 16, fontWeight: '700', color: c.text, marginBottom: 10 },
+    barCard: {
+      backgroundColor: c.surface,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    barRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    barLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: 65,
+    },
+    barDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
+    barLabel: { fontSize: 13, color: c.textSecondary },
+    barTrack: {
+      flex: 1,
+      height: 8,
+      backgroundColor: c.surfaceAlt,
+      borderRadius: 4,
+      marginHorizontal: 8,
+      overflow: 'hidden',
+    },
+    barFill: { height: 8, borderRadius: 4, minWidth: 4 },
+    barCredit: { backgroundColor: c.credit },
+    barDebit: { backgroundColor: c.debit },
+    barAmount: { fontSize: 13, fontWeight: '600', color: c.text, width: 80, textAlign: 'right' },
+    quickRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 20,
+      paddingHorizontal: 16,
+    },
+    quickButton: {
+      flex: 1,
+      flexDirection: 'row',
+      backgroundColor: c.primary,
+      borderRadius: 14,
+      paddingVertical: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      shadowColor: c.primary,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 3,
+    },
+    quickButtonOutline: {
+      backgroundColor: c.surface,
+      borderWidth: 1.5,
+      borderColor: c.primary,
+      shadowColor: c.shadow,
+      shadowOpacity: 0.06,
+    },
+    quickButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+    quickButtonOutlineText: { color: c.primary },
+    recentCard: {
+      backgroundColor: c.surface,
+      borderRadius: 16,
+      padding: 4,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    recentRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    recentRowBorder: { borderBottomWidth: 1, borderBottomColor: c.border },
+    recentIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    recentIconCredit: { backgroundColor: c.creditBg },
+    recentIconDebit: { backgroundColor: c.debitBg },
+    recentInfo: { flex: 1 },
+    recentName: { fontSize: 14, fontWeight: '600', color: c.text },
+    recentDate: { fontSize: 12, color: c.textMuted, marginTop: 2 },
+    recentAmount: { fontSize: 14, fontWeight: '700' },
+    recentCredit: { color: c.credit },
+    recentDebit: { color: c.debit },
+  });
+}

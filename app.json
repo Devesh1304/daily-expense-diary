@@ -10,7 +10,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#F5F7FA"
     },
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "scheme": "dailyexpensediary",
     "ios": {
       "supportsTablet": true,

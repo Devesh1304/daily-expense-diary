@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, colorForLetter } from '../theme/colors';
+import { Palette, colorForLetter } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { formatINR } from '../utils/currency';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export default function LedgerAccountRow({ name, balance, credit, debit, onPress, onDelete }: Props) {
+  const { palette: c } = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const letter = name.trim().charAt(0).toUpperCase() || '?';
   const positive = balance >= 0;
 
@@ -33,46 +36,48 @@ export default function LedgerAccountRow({ name, balance, credit, debit, onPress
       </Text>
       {onDelete && (
         <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="trash-outline" size={18} color={colors.debit} />
+          <Ionicons name="trash-outline" size={18} color={c.debit} />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginHorizontal: 12,
-    marginBottom: 8,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  avatarText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  info: { flex: 1 },
-  name: { fontSize: 15, fontWeight: '600', color: colors.text },
-  subtext: { fontSize: 12, color: colors.textMuted, marginTop: 3 },
-  balance: { fontWeight: '700', fontSize: 15 },
-  positive: { color: colors.credit },
-  negative: { color: colors.debit },
-  deleteBtn: {
-    marginLeft: 10,
-    padding: 6,
-  },
-});
+function makeStyles(c: Palette) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.surface,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      marginHorizontal: 12,
+      marginBottom: 8,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    avatarText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+    info: { flex: 1 },
+    name: { fontSize: 15, fontWeight: '600', color: c.text },
+    subtext: { fontSize: 12, color: c.textMuted, marginTop: 3 },
+    balance: { fontWeight: '700', fontSize: 15 },
+    positive: { color: c.credit },
+    negative: { color: c.debit },
+    deleteBtn: {
+      marginLeft: 10,
+      padding: 6,
+    },
+  });
+}
