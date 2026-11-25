@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -7,19 +7,22 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useTransactions } from '../context/TransactionsContext';
 import { createTransaction, updateTransactionWithAccount } from '../firebase/firestore';
 import { Direction, Transaction } from '../types';
 import { Palette } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { todayString } from '../utils/dateRanges';
+import { withTimeout } from '../utils/authErrors';
 import DateField from './DateField';
+import StatusBanner from './StatusBanner';
 
 interface Props {
   visible: boolean;
@@ -28,11 +31,31 @@ interface Props {
   existingTransaction?: Transaction;
 }
 
+type EntryField = 'name' | 'amount';
+
+const SAVE_FAILED_MESSAGE = 'Could not save this entry. Please try again.';
+
+// Firestore error codes -> readable message. Anything else uses the fallback.
+function saveErrorMessage(err: unknown): string {
+  const code = err && typeof err === 'object' && 'code' in err ? String((err as { code: unknown }).code) : '';
+  if (code === 'unavailable' || code === 'auth/network-request-failed') {
+    return 'No connection. Check your network and try again.';
+  }
+  if (code === 'permission-denied') {
+    return 'You do not have permission to save this entry. Try logging in again.';
+  }
+  if (code === 'auth/timeout') {
+    return 'Saving took too long. Check your connection and try again.';
+  }
+  return SAVE_FAILED_MESSAGE;
+}
+
 export default function AddTransactionModal({ visible, onClose, direction, existingTransaction }: Props) {
   const { palette: c } = useTheme();
   const styles = useMemo(() => makeStyles(c), [c]);
   const { user } = useAuth();
   const { ledgerAccounts } = useTransactions();
+  const { showToast } = useToast();
   const isEditing = !!existingTransaction;
 
   const [date, setDate] = useState(existingTransaction?.date ?? todayString());
@@ -40,11 +63,27 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
   const [name, setName] = useState(existingTransaction?.accountName ?? '');
   const [remarks, setRemarks] = useState(existingTransaction?.remarks ?? '');
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errorFields, setErrorFields] = useState<EntryField[]>([]);
+  const [successNote, setSuccessNote] = useState<string | null>(null);
+  const inFlight = useRef(false); // blocks a second save before React re-renders
 
   const suggestions =
     name.trim().length > 0
       ? ledgerAccounts.filter((a) => a.name.toLowerCase().includes(name.trim().toLowerCase())).slice(0, 5)
       : [];
+
+  function clearMessages() {
+    setError(null);
+    setErrorFields([]);
+    setSuccessNote(null);
+  }
+
+  function fail(message: string, fields: EntryField[] = []) {
+    setSuccessNote(null);
+    setError(message);
+    setErrorFields(fields);
+  }
 
   function reset() {
     setDate(existingTransaction?.date ?? todayString());
@@ -54,66 +93,102 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
   }
 
   async function handleSave(addAnother: boolean) {
-    const numericAmount = parseFloat(amount);
-    if (!name.trim()) {
-      Alert.alert('Missing name', 'Please enter a name for this entry.');
-      return;
-    }
-    if (!numericAmount || numericAmount <= 0) {
-      Alert.alert('Invalid amount', 'Please enter an amount greater than 0.');
-      return;
-    }
-    if (!user) return;
+    if (inFlight.current) return;
+    clearMessages();
 
+    const numericAmount = parseFloat(amount);
+    if (!name.trim()) return fail('Please enter a name for this entry.', ['name']);
+    if (!numericAmount || numericAmount <= 0) return fail('Please enter an amount greater than 0.', ['amount']);
+    if (!user) return fail('You are signed out. Please log in again.');
+
+    inFlight.current = true;
     setSaving(true);
     try {
       if (existingTransaction) {
-        await updateTransactionWithAccount(existingTransaction.id, user.uid, {
-          date,
-          amount: numericAmount,
-          accountName: name,
-          remarks,
-        });
+        await withTimeout(
+          updateTransactionWithAccount(existingTransaction.id, user.uid, {
+            date,
+            amount: numericAmount,
+            accountName: name,
+            remarks,
+          })
+        );
+        showToast('Entry updated');
         onClose();
       } else {
-        await createTransaction({
-          userId: user.uid,
-          direction,
-          date,
-          amount: numericAmount,
-          accountName: name,
-          remarks,
-        });
+        await withTimeout(
+          createTransaction({
+            userId: user.uid,
+            direction,
+            date,
+            amount: numericAmount,
+            accountName: name,
+            remarks,
+          })
+        );
         if (addAnother) {
+          // The form stays open, so the confirmation has to appear inside it.
           setAmount('');
           setName('');
           setRemarks('');
+          setSuccessNote('Entry saved. Add the next one.');
         } else {
+          // The form closes, so the confirmation appears on the screen behind it.
           reset();
+          showToast('Entry saved');
           onClose();
         }
       }
-    } catch (e: any) {
-      Alert.alert('Save failed', e.message ?? 'Please try again.');
+    } catch (e) {
+      if (__DEV__) {
+        console.warn('[transaction]', {
+          context: existingTransaction ? 'update' : 'create',
+          code: e && typeof e === 'object' && 'code' in e ? (e as { code: unknown }).code : 'unknown',
+          message: e instanceof Error ? e.message : String(e),
+        });
+      }
+      fail(saveErrorMessage(e));
     } finally {
+      inFlight.current = false;
       setSaving(false);
     }
   }
+
+  const amountStyle = errorFields.includes('amount') ? [styles.input, styles.inputError] : styles.input;
+  const nameStyle = errorFields.includes('name') ? [styles.input, styles.inputError] : styles.input;
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.backdrop}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.sheet}>
           <View style={styles.handle} />
           <View style={styles.headerRow}>
             <Text style={styles.title}>{isEditing ? 'Edit Transaction' : 'Add Transaction'}</Text>
-            <TouchableOpacity onPress={() => { reset(); onClose(); }} style={styles.closeButton}>
+            <TouchableOpacity
+              onPress={() => { reset(); onClose(); }}
+              style={styles.closeButton}
+              disabled={saving}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
               <Ionicons name="close" size={20} color={c.textSecondary} />
             </TouchableOpacity>
           </View>
+
+          {error !== null && (
+            <View style={styles.banner}>
+              <StatusBanner kind="error" message={error} onDismiss={clearMessages} />
+            </View>
+          )}
+          {successNote !== null && (
+            <View style={styles.banner}>
+              <StatusBanner kind="success" message={successNote} onDismiss={clearMessages} />
+            </View>
+          )}
+
           <View style={[styles.directionBadge, direction === 'credit' ? styles.creditBadge : styles.debitBadge]}>
             <Ionicons
               name={direction === 'credit' ? 'arrow-down' : 'arrow-up'}
@@ -125,32 +200,49 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
             </Text>
           </View>
 
-          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="interactive"
+          >
             <Text style={styles.label}>Date</Text>
             <DateField value={date} onChange={setDate} />
 
             <Text style={styles.label}>Amount</Text>
             <TextInput
-              style={styles.input}
+              style={amountStyle}
               placeholder="Enter amount"
               placeholderTextColor={c.textMuted}
               keyboardType="numeric"
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={(v) => {
+                setAmount(v);
+                if (error) clearMessages();
+              }}
+              editable={!saving}
             />
 
             <Text style={styles.label}>Name</Text>
             <TextInput
-              style={styles.input}
+              style={nameStyle}
               placeholder="Enter name"
               placeholderTextColor={c.textMuted}
               value={name}
-              onChangeText={setName}
+              onChangeText={(v) => {
+                setName(v);
+                if (error) clearMessages();
+              }}
+              editable={!saving}
             />
             {suggestions.length > 0 && (
               <View style={styles.suggestions}>
                 {suggestions.map((s) => (
-                  <TouchableOpacity key={s.id} style={styles.suggestionRow} onPress={() => setName(s.name)}>
+                  <TouchableOpacity
+                    key={s.id}
+                    style={styles.suggestionRow}
+                    onPress={() => setName(s.name)}
+                    disabled={saving}
+                  >
                     <Text style={styles.suggestionText}>{s.name}</Text>
                   </TouchableOpacity>
                 ))}
@@ -164,24 +256,36 @@ export default function AddTransactionModal({ visible, onClose, direction, exist
               placeholderTextColor={c.textMuted}
               value={remarks}
               onChangeText={setRemarks}
+              editable={!saving}
             />
 
             <View style={styles.buttonRow}>
               {!isEditing && (
                 <TouchableOpacity
-                  style={[styles.button, styles.secondaryButton]}
+                  style={[styles.button, styles.secondaryButton, saving && styles.buttonBusy]}
                   onPress={() => handleSave(true)}
                   disabled={saving}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: saving, busy: saving }}
                 >
                   <Text style={styles.secondaryButtonText}>Save & Add New</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
-                style={[styles.button, styles.primaryButton]}
+                style={[styles.button, styles.primaryButton, saving && styles.buttonBusy]}
                 onPress={() => handleSave(false)}
                 disabled={saving}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: saving, busy: saving }}
               >
-                <Text style={styles.primaryButtonText}>{isEditing ? 'Save Changes' : 'Save'}</Text>
+                {saving ? (
+                  <View style={styles.buttonContent}>
+                    <ActivityIndicator color="#fff" />
+                    <Text style={styles.primaryButtonText}>Saving...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.primaryButtonText}>{isEditing ? 'Save Changes' : 'Save'}</Text>
+                )}
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -227,6 +331,7 @@ function makeStyles(c: Palette) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    banner: { marginTop: 12 },
     directionBadge: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -250,6 +355,10 @@ function makeStyles(c: Palette) {
       fontSize: 15,
       backgroundColor: c.surfaceAlt,
       color: c.text,
+    },
+    inputError: {
+      borderColor: '#DC2626',
+      borderWidth: 2,
     },
     suggestions: {
       borderWidth: 1,
@@ -280,6 +389,8 @@ function makeStyles(c: Palette) {
       paddingVertical: 15,
       alignItems: 'center',
     },
+    buttonBusy: { opacity: 0.7 },
+    buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     primaryButton: { backgroundColor: c.primary },
     primaryButtonText: { color: '#fff', fontWeight: '700' },
     secondaryButton: { borderWidth: 1.5, borderColor: c.primary, backgroundColor: c.surface },

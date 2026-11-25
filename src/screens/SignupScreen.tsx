@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -13,43 +12,85 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { Palette } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
+import StatusBanner from '../components/StatusBanner';
+import {
+  AuthField,
+  getAuthErrorFields,
+  getAuthErrorMessage,
+  isValidEmail,
+  logAuthError,
+  withTimeout,
+} from '../utils/authErrors';
+
+const MIN_PASSWORD_LENGTH = 6;
 
 export default function SignupScreen({ navigation }: any) {
   const { palette: c } = useTheme();
   const styles = useMemo(() => makeStyles(c), [c]);
+  const insets = useSafeAreaInsets();
   const { signUp } = useAuth();
+  const { showToast } = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errorFields, setErrorFields] = useState<AuthField[]>([]);
+  const inFlight = useRef(false); // blocks a second submit before React re-renders
+
+  function clearError() {
+    setError(null);
+    setErrorFields([]);
+  }
+
+  function fail(message: string, fields: AuthField[] = []) {
+    setError(message);
+    setErrorFields(fields);
+  }
 
   async function handleSignup() {
-    if (!email.trim() || !password) {
-      Alert.alert('Missing info', 'Please enter your email and password.');
-      return;
+    if (inFlight.current) return;
+    clearError();
+
+    if (!email.trim()) return fail('Please enter your email address.', ['email']);
+    if (!isValidEmail(email)) return fail("That email address doesn't look right. Please check it.", ['email']);
+    if (!password) return fail('Please choose a password.', ['password']);
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      return fail(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`, ['password']);
     }
-    if (password.length < 6) {
-      Alert.alert('Weak password', 'Password should be at least 6 characters.');
-      return;
-    }
-    setLoading(true);
+
+    inFlight.current = true;
+    setSubmitting(true);
     try {
-      await signUp(name, email, password);
-    } catch (e: any) {
-      Alert.alert('Signup failed', e.message ?? 'Please try again.');
+      await withTimeout(signUp(name, email, password));
+      showToast('Account created. Welcome!');
+    } catch (e) {
+      logAuthError('signup', e);
+      fail(getAuthErrorMessage(e), getAuthErrorFields(e));
     } finally {
-      setLoading(false);
+      inFlight.current = false;
+      setSubmitting(false);
     }
   }
+
+  const fieldStyle = (field: AuthField) => [styles.input, errorFields.includes(field) && styles.inputError];
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      {error !== null && (
+        <View style={[styles.bannerWrap, { paddingTop: insets.top + 8 }]}>
+          <StatusBanner kind="error" message={error} onDismiss={clearError} />
+        </View>
+      )}
+
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -70,30 +111,52 @@ export default function SignupScreen({ navigation }: any) {
             placeholderTextColor={c.textMuted}
             value={name}
             onChangeText={setName}
+            editable={!submitting}
           />
           <TextInput
-            style={styles.input}
+            style={fieldStyle('email')}
             placeholder="Email"
             placeholderTextColor={c.textMuted}
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(v) => {
+              setEmail(v);
+              if (error) clearError();
+            }}
+            editable={!submitting}
           />
           <TextInput
-            style={styles.input}
+            style={fieldStyle('password')}
             placeholder="Password"
             placeholderTextColor={c.textMuted}
             secureTextEntry
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(v) => {
+              setPassword(v);
+              if (error) clearError();
+            }}
+            editable={!submitting}
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign Up</Text>}
+          <TouchableOpacity
+            style={[styles.button, submitting && styles.buttonBusy]}
+            onPress={handleSignup}
+            disabled={submitting}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: submitting, busy: submitting }}
+          >
+            {submitting ? (
+              <View style={styles.buttonContent}>
+                <ActivityIndicator color="#fff" />
+                <Text style={styles.buttonText}>Creating account...</Text>
+              </View>
+            ) : (
+              <Text style={styles.buttonText}>Sign Up</Text>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} disabled={submitting}>
             <Text style={styles.link}>Already have an account? <Text style={styles.linkBold}>Login</Text></Text>
           </TouchableOpacity>
         </ScrollView>
@@ -107,6 +170,12 @@ function makeStyles(c: Palette) {
     container: {
       flex: 1,
       backgroundColor: c.background,
+    },
+    bannerWrap: {
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+      backgroundColor: c.background,
+      zIndex: 10,
     },
     scrollContent: {
       flexGrow: 1,
@@ -147,6 +216,10 @@ function makeStyles(c: Palette) {
       backgroundColor: c.surface,
       color: c.text,
     },
+    inputError: {
+      borderColor: '#DC2626',
+      borderWidth: 2,
+    },
     button: {
       backgroundColor: c.primary,
       borderRadius: 14,
@@ -158,6 +231,14 @@ function makeStyles(c: Palette) {
       shadowOpacity: 0.25,
       shadowRadius: 8,
       elevation: 4,
+    },
+    buttonBusy: {
+      opacity: 0.8,
+    },
+    buttonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
     },
     buttonText: {
       color: '#fff',

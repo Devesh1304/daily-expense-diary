@@ -9,6 +9,7 @@ import { TransactionsProvider } from './src/context/TransactionsContext';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import MainTabs from './src/navigation/MainTabs';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { ToastProvider } from './src/context/ToastContext';
 
 function Root() {
   const { user, authLoading } = useAuth();
@@ -60,10 +61,12 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <AuthProvider>
-            <Root />
-            <ThemedStatusBar />
-          </AuthProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <Root />
+              <ThemedStatusBar />
+            </AuthProvider>
+          </ToastProvider>
         </GestureHandlerRootView>
       </ThemeProvider>
     </SafeAreaProvider>
